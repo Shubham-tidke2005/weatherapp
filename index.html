@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather by Country</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(ellipse at bottom, #0d0d0d 0%, #000000 100%);
+      min-height: 100vh;
+      padding: 50px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-align: center;
+      color: #f0f0f0;
+      margin-bottom: 50px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .forecast-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 35px;
+      width: 100%;
+      max-width: 1300px;
+      margin-bottom: 50px;
+    }
+
+    .weather-block {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.06);
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .weather-block:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 14px 35px rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .weather-block::before {
+      content: "";
+      position: absolute;
+      top: -100%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(255,255,255,0.1), transparent);
+      transform: skewY(-45deg);
+      transition: 0.6s;
+    }
+
+    .weather-block:hover::before {
+      top: 100%;
+    }
+
+    .weather-block img {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 15px;
+    }
+
+    .country {
+      font-weight: 600;
+      font-size: 22px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .temp {
+      font-size: 26px;
+      font-weight: bold;
+      color: #ffebc7;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      color: #aaa;
+      font-size: 15px;
+      padding: 20px;
+      margin-top: auto;
+      width: 100%;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2.3rem; }
+      .forecast-container {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 25px;
+      }
+      .weather-block img {
+        width: 60px;
+        height: 60px;
+      }
+      .country { font-size: 18px; }
+      .temp { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🌐 Live Weather by Country</h1>
+
+  <div class="forecast-container" id="forecast-container">
+    <!-- Weather cards will load here -->
+  </div>
+
+  <footer>
+    © 2025 Shubham Tidke
+  </footer>
+
+  <script>
+    const apiKey = 'd3bef0db20f48c00453fa8a0f889b52d';
+
+    const countries = [
+      { name: 'Delhi', label: 'India', code: '🇮🇳', link: 'india.html' },
+      { name: 'New York', label: 'USA', code: '🇺🇸', link: 'usa.html' },
+      { name: 'Toronto', label: 'Canada', code: '🇨🇦', link: 'canada.html' },
+      { name: 'Tokyo', label: 'Japan', code: '🇯🇵', link: 'japan.html' },
+      { name: 'Berlin', label: 'Germany', code: '🇩🇪', link: 'germany.html' },
+      { name: 'Sydney', label: 'Australia', code: '🇦🇺', link: 'australia.html' },
+      { name: 'São Paulo', label: 'Brazil', code: '🇧🇷', link: 'brazil.html' },
+      { name: 'London', label: 'UK', code: '🇬🇧', link: 'uk.html' }
+    ];
+
+    async function fetchWeather(city) {
+      try {
+        const res = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`
+        );
+        const data = await res.json();
+        return {
+          temp: Math.round(data.main.temp),
+          icon: data.weather[0].icon,
+          desc: data.weather[0].description
+        };
+      } catch (err) {
+        console.error(`Failed to fetch weather for ${city}:`, err);
+        return { temp: 'N/A', icon: '01d', desc: 'Unavailable' };
+      }
+    }
+
+    async function loadWeatherCards() {
+      const container = document.getElementById('forecast-container');
+      for (let country of countries) {
+        const weather = await fetchWeather(country.name);
+        const card = document.createElement('a');
+        card.href = country.link;
+        card.className = 'weather-block';
+        card.innerHTML = `
+          <div class="country">${country.code} ${country.label}</div>
+          <img src="https://openweathermap.org/img/wn/${weather.icon}@2x.png" alt="${weather.desc}">
+          <div class="temp">${weather.temp}°C</div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    loadWeatherCards();
+  </script>
+</body>
+</html>
